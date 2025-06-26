@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>الفائز - وهج</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #0f1c2e;
+      color: #00bfff;
+      font-family: 'Cairo', sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 24px;
+      margin-bottom: 40px;
+      color: #ddd;
+    }
+    button {
+      background-color: #00bfff;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #009acd;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 مبروك! 🎉</h1>
+  <p id="winnerName">لقد فاز اللاعب!</p>
+  <button onclick="goHome()">العودة للرئيسية</button>
+
+  <script>
+    function getQueryParam(param) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(param);
+    }
+
+    function goHome() {
+      window.location.href = 'whj.html'; // أو الصفحة الرئيسية اللي تريدها
+    }
+
+    // عرض اسم الفائز
+    const winner = getQueryParam('winner');
+    if (winner) {
+      document.getElementById('winnerName').textContent = `اللاعب ${winner} هو الفائز 🎊`;
+    }
+  </script>
+</body>
+</html>

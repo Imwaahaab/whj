@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>لعبة برا السالفة - وهج</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&display=swap" rel="stylesheet" />
+<style>
+  body {
+    margin: 0; 
+    background-color: #0f1c2e; 
+    color: #fff; 
+    font-family: 'Cairo', sans-serif; 
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  header {
+    width: 100%;
+    background-color: #0b1a2d; 
+    padding: 15px 30px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    font-size: 24px;
+    font-weight: 900;
+    color: #00bfff;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .container {
+    background: #13294b;
+    border-radius: 14px;
+    padding: 30px 40px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  h2 {
+    margin-top: 0;
+    color: #00bfff;
+    font-weight: 900;
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    margin: 15px 0 8px;
+    font-weight: 700;
+    text-align: right;
+  }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 18px;
+    border-radius: 8px;
+    border: none;
+    box-sizing: border-box;
+    text-align: right;
+  }
+  button {
+    background-color: #00bfff;
+    color: white;
+    border: none;
+    padding: 14px 20px;
+    font-size: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: 25px;
+    width: 100%;
+    font-weight: 700;
+    transition: background-color 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background-color: #009acd;
+  }
+  button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
+  #messageBox {
+    margin-top: 20px;
+    font-weight: 700;
+    font-size: 18px;
+    min-height: 48px;
+    color: #ff6666;
+  }
+  .hidden {
+    display: none;
+  }
+  #currentTurn {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 20px;
+    color: #00ff88;
+  }
+  #questionsList {
+    max-height: 180px;
+    overflow-y: auto;
+    background: #0b1a2d;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    text-align: right;
+  }
+  #questionsList div {
+    margin-bottom: 10px;
+    font-size: 17px;
+  }
+  #playersVoteList button {
+    width: 100%;
+    margin: 5px 0;
+    font-size: 18px;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #1d3c5f;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  #playersVoteList button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
+  #customAskSection label {
+    margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+
+<header>لعبة برا السالفة - وهج</header>
+
+<div class="container" id="setupScreen">
+  <h2>اختيار موضوع ولعب مع الأصدقاء</h2>
+  <label for="topicSelect">اختر الموضوع:</label>
+  <select id="topicSelect">
+    <option value="">-- اختر موضوع --</option>
+    <option value="حيوانات">حيوانات</option>
+    <option value="فواكه">فواكه</option>
+    <option value="مشاهير">مشاهير</option>
+    <option value="أكلات">أكلات</option>
+    <option value="مدن">مدن</option>
+  </select>
+
+  <label>أدخل أسماء اللاعبين (3 إلى 10):</label>
+  <div id="playersInputs">
+    <input type="text" placeholder="اسم اللاعب 1" />
+    <input type="text" placeholder="اسم اللاعب 2" />
+    <input type="text" placeholder="اسم اللاعب 3" />
+  </div>
+  <button id="addPlayerBtn">➕ أضف لاعب</button>
+  <button id="startGameBtn">ابدأ اللعبة</button>
+  <div id="messageBox"></div>
+</div>
+
+<div class="container hidden" id="roleRevealScreen">
+  <h2>كشف الأدوار</h2>
+  <div id="currentTurn"></div>
+  <div id="wordReveal"></div>
+  <button id="nextRevealBtn">التالي</button>
+</div>
+
+<div class="container hidden" id="questionScreen">
+  <h2>جولات الأسئلة</h2>
+  <div id="currentTurnQuestion"></div>
+  
+  <div id="questionsList"></div>
+
+  <div id="customAskSection" class="hidden">
+    <label for="customAskerSelect">اختر من يسأل:</label>
+    <select id="customAskerSelect"></select>
+
+    <label for="customTargetSelect">اختر من يُسأل:</label>
+    <select id="customTargetSelect"></select>
+
+    <button id="customAskBtn">سؤال جديد</button>
+  </div>
+  
+  <button id="nextQuestionBtn" disabled>التالي</button>
+  <button id="startVoteBtn" class="hidden">بدء التصويت</button>
+</div>
+
+<div class="container hidden" id="voteScreen">
+  <h2>التصويت على برا السالفة</h2>
+  <div id="voteInstructions">صوت من تعتقد أنه برا السالفة</div>
+  <div id="playersVoteList"></div>
+  <button id="finishVoteBtn" disabled>إنهاء التصويت</button>
+</div>
+
+<div class="container hidden" id="resultScreen">
+  <h2>النتيجة</h2>
+  <div id="resultMessage" style="font-size:20px; font-weight:900; text-align:center; margin-bottom: 20px;"></div>
+  <button id="restartBtn">إعادة اللعب</button>
+</div>
+
+<script>
+  const topicsWords = {
+    "حيوانات": [
+      "فيل", "أسد", "زرافة", "نمر", "فهد", "كنغر", "تمساح", "غزال", "ذئب", "دب",
+      "ثعلب", "بطريق", "سمكة قرش", "ببغاء", "نعامة", "حصان", "سلحفاة", "قرش", "فهد", "نسر"
+    ],
+    "فواكه": [
+      "تفاح", "موز", "برتقال", "عنب", "خوخ", "رمان", "فراولة", "أناناس", "كيوي", "مانجو",
+      "كمثرى", "جوافة", "تين", "ليمون", "كرز", "بابايا", "بطيخ", "دراق", "كشمش", "مشمش"
+    ],
+    "مشاهير": [
+      "أحمد", "محمد", "سلمان", "علي", "خالد", "فاطمة", "سارة", "ريم", "هند", "نورة",
+      "عبدالله", "يوسف", "محمد علي", "عائشة", "خديجة", "هاني", "رنا", "سمير", "مها", "منى"
+    ],
+    "أكلات": [
+      "كبسة", "برجر", "بيتزا", "شاورما", "معكرونة", "سلطة", "حمص", "فلافل", "كباب", "مندي",
+      "بطاطا مقلية", "شوربة", "سمك", "دجاج مشوي", "كنافة", "بقلاوة", "شوربة عدس", "شيش طاووق", "ورق عنب", "محشي"
+    ],
+    "مدن": [
+      "الرياض", "جدة", "دبي", "الدوحة", "أبوظبي", "الكويت", "مسقط", "بيروت", "دمشق", "بغداد",
+      "طرابلس", "المنامة", "القدس", "صنعاء", "عدن", "حيفا", "الخرطوم", "الجزائر", "تونس", "الرباط"
+    ]
+  };
+
+  const minPlayers = 3;
+  const maxPlayers = 10;
+
+  // عناصر DOM
+  const setupScreen = document.getElementById('setupScreen');
+  const topicSelect = document.getElementById('topicSelect');
+  const playersInputs = document.getElementById('playersInputs');
+  const addPlayerBtn = document.getElementById('addPlayerBtn');
+  const startGameBtn = document.getElementById('startGameBtn');
+  const messageBox = document.getElementById('messageBox');
+
+  const roleRevealScreen = document.getElementById('roleRevealScreen');
+  const currentTurn = document.getElementById('currentTurn');
+  const wordReveal = document.getElementById('wordReveal');
+  const nextRevealBtn = document.getElementById('nextRevealBtn');
+
+  const questionScreen = document.getElementById('questionScreen');
+  const currentTurnQuestion = document.getElementById('currentTurnQuestion');
+  const questionsList = document.getElementById('questionsList');
+  const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+  const customAskSection = document.getElementById('customAskSection');
+  const customAskerSelect = document.getElementById('customAskerSelect');
+  const customTargetSelect = document.getElementById('customTargetSelect');
+  const customAskBtn = document.getElementById('customAskBtn');
+  const startVoteBtn = document.getElementById('startVoteBtn');
+
+  const voteScreen = document.getElementById('voteScreen');
+  const playersVoteList = document.getElementById('playersVoteList');
+  const finishVoteBtn = document.getElementById('finishVoteBtn');
+
+  const resultScreen = document.getElementById('resultScreen');
+  const resultMessage = document.getElementById('resultMessage');
+  const restartBtn = document.getElementById('restartBtn');
+
+  // حالة اللعبة
+  let players = [];
+  let currentPlayerIndex = 0;
+  let currentPhase = 'setup'; // مراحل: setup, revealRoles, questions, voting, result
+  let chosenTopic = '';
+  let secretWord = '';
+  let liarIndex = -1;
+  let questionsAsked = [];
+  const maxQuestions = 5;
+  let questionCount = 0;
+  let selectedVoteIndex = null;
+
+  // خلط عناصر مصفوفة
+  function shuffle(arr) {
+    let array = arr.slice();
+    for (let i = array.length -1; i > 0; i--) {
+      let j = Math.floor(Math.random()*(i+1));
+      [array[i],array[j]] = [array[j],array[i]];
+    }
+    return array;
+  }
+
+  // إضافة لاعب جديد في شاشة الإعداد
+  addPlayerBtn.onclick = () => {
+    if (playersInputs.children.length >= maxPlayers) return;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = `اسم اللاعب ${playersInputs.children.length + 1}`;
+    playersInputs.appendChild(input);
+  };
+
+  // بدء اللعبة
+  startGameBtn.onclick = () => {
+    messageBox.textContent = '';
+    chosenTopic = topicSelect.value;
+    if (!chosenTopic) {
+      messageBox.textContent = 'يرجى اختيار موضوع للعب';
+      return;
+    }
+    const inputs = playersInputs.querySelectorAll('input');
+    const names = [];
+    for (let inp of inputs) {
+      if (inp.value.trim() === '') {
+        messageBox.textContent = 'يرجى إدخال أسماء جميع اللاعبين';
+        return;
+      }
+      names.push(inp.value.trim());
+    }
+    if (names.length < minPlayers || names.length > maxPlayers) {
+      messageBox.textContent = `عدد اللاعبين يجب أن يكون بين ${minPlayers} و ${maxPlayers}`;
+      return;
+    }
+    players = names.map(name => ({name, isOut:false}));
+    startRevealRoles();
+  };
+
+  // كشف الأدوار
+  function startRevealRoles() {
+    setupScreen.classList.add('hidden');
+    roleRevealScreen.classList.remove('hidden');
+    currentPlayerIndex = 0;
+    secretWord = shuffle(topicsWords[chosenTopic])[0];
+    liarIndex = Math.floor(Math.random() * players.length);
+    currentPhase = 'revealRoles';
+    showNextRole();
+  }
+
+  function showNextRole() {
+    if (currentPlayerIndex >= players.length) {
+      currentPhase = 'questions';
+      currentPlayerIndex = 0;
+      roleRevealScreen.classList.add('hidden');
+      startQuestionsRound();
+      return;
+    }
+    currentTurn.textContent = `عط الجوال لـ ${players[currentPlayerIndex].name}`;
+    if (currentPlayerIndex === liarIndex) {
+      wordReveal.textContent = `أنت برا السالفة! لا تعرف الكلمة السرية.`;
+    } else {
+      wordReveal.textContent = `كلمتك السرية هي: ${secretWord}`;
+    }
+  }
+
+  nextRevealBtn.onclick = () => {
+    currentPlayerIndex++;
+    showNextRole();
+  };
+
+  // بدء جولات الأسئلة
+  function startQuestionsRound() {
+    questionScreen.classList.remove('hidden');
+    questionCount = 0;
+    questionsAsked = [];
+    currentPlayerIndex = 0;
+    currentPhase = 'questions';
+    updateQuestionTurn();
+    renderQuestions();
+    nextQuestionBtn.disabled = false;
+    startVoteBtn.classList.add('hidden');
+    customAskSection.classList.add('hidden');
+  }
+
+  function updateQuestionTurn() {
+    const asker = players[currentPlayerIndex].name;
+    let targetIndex = currentPlayerIndex;
+    // نختار لاعب عشوائي غير نفس اللاعب اللي بيسأل
+    while(targetIndex === currentPlayerIndex) {
+      targetIndex = Math.floor(Math.random() * players.length);
+    }
+    const target = players[targetIndex].name;
+
+    currentTurnQuestion.textContent = `${asker} يسأل ${target}`;
+  }
+
+  function renderQuestions() {
+    questionsList.innerHTML = '';
+    questionsAsked.forEach(q => {
+      const askerName = players[q.asker].name;
+      const targetName = players[q.target].name;
+      const div = document.createElement('div');
+      div.textContent = `${askerName} سأل ${targetName}`;
+      questionsList.appendChild(div);
+    });
+  }
+
+  nextQuestionBtn.onclick = () => {
+    // نسجل السؤال مع من طرح ومن أجاب
+    const asker = currentPlayerIndex;
+    let targetIndex = currentPlayerIndex;
+    while(targetIndex === currentPlayerIndex) {
+      targetIndex = Math.floor(Math.random() * players.length);
+    }
+    questionsAsked.push({asker, target: targetIndex});
+    questionCount++;
+
+    if(questionCount >= maxQuestions) {
+      // نطلع من دور الاسئلة للمرحلة الجديدة
+      // إظهار اختيار السائل الجديد ليختار من بيسأل عشان التنويع
+      nextQuestionBtn.disabled = true;
+      customAskSection.classList.remove('hidden');
+      startVoteBtn.classList.remove('hidden');
+      currentTurnQuestion.textContent = `اختار من بيسأل ومن يُسأل ثم اضغط سؤال جديد أو بدء التصويت`;
+      populateCustomSelects();
+      return;
+    }
+
+    currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+    updateQuestionTurn();
+    renderQuestions();
+  };
+
+  // تجهيز القوائم في اختيار السائل الجديد
+  function populateCustomSelects() {
+    customAskerSelect.innerHTML = '';
+    customTargetSelect.innerHTML = '';
+    players.forEach((p, i) => {
+      if(!p.isOut) {
+        let option = document.createElement('option');
+        option.value = i;
+        option.textContent = p.name;
+        customAskerSelect.appendChild(option);
+
+        // نسخ للتاني بس لازم نمنع اختيار نفس الشخصين
+        option = document.createElement('option');
+        option.value = i;
+        option.textContent = p.name;
+        customTargetSelect.appendChild(option);
+      }
+    });
+    customAskerSelect.selectedIndex = 0;
+    customTargetSelect.selectedIndex = 1 >= players.length ? 0 : 1;
+    validateCustomAskBtn();
+  }
+
+  // منع اختيار نفس اللاعب في السائل والمُسأل
+  customAskerSelect.onchange = () => {
+    if(customAskerSelect.value === customTargetSelect.value) {
+      // نغير الهدف تلقائياً
+      let newIndex = (parseInt(customTargetSelect.value) + 1) % players.length;
+      if(newIndex === parseInt(customAskerSelect.value)) newIndex = (newIndex + 1) % players.length;
+      customTargetSelect.value = newIndex;
+    }
+    validateCustomAskBtn();
+  };
+  customTargetSelect.onchange = () => {
+    if(customAskerSelect.value === customTargetSelect.value) {
+      let newIndex = (parseInt(customAskerSelect.value) + 1) % players.length;
+      if(newIndex === parseInt(customTargetSelect.value)) newIndex = (newIndex + 1) % players.length;
+      customAskerSelect.value = newIndex;
+    }
+    validateCustomAskBtn();
+  };
+
+  // تفعيل زر السؤال الجديد إذا الاختيار صحيح
+  function validateCustomAskBtn() {
+    customAskBtn.disabled = (customAskerSelect.value === customTargetSelect.value);
+  }
+
+  // زر إضافة سؤال جديد في المرحلة المخصصة للاختيار اليدوي
+  customAskBtn.onclick = () => {
+    const asker = parseInt(customAskerSelect.value);
+    const target = parseInt(customTargetSelect.value);
+    questionsAsked.push({asker, target});
+    questionCount++;
+
+    renderQuestions();
+
+    if(questionCount >= maxQuestions + 3) {
+      // بعد كم سؤال زيادة نخفي إضافة الأسئلة
+      customAskSection.classList.add('hidden');
+      startVoteBtn.classList.remove('hidden');
+      nextQuestionBtn.disabled = true;
+      currentTurnQuestion.textContent = `يمكنك الآن بدء التصويت`;
+    } else {
+      currentTurnQuestion.textContent = `${players[asker].name} يسأل ${players[target].name}`;
+    }
+    validateCustomAskBtn();
+  };
+
+  // زر بدء التصويت من مرحلة الأسئلة
+  startVoteBtn.onclick = () => {
+    questionScreen.classList.add('hidden');
+    startVotingRound();
+  };
+
+  // بدء جولة التصويت
+  function startVotingRound() {
+    voteScreen.classList.remove('hidden');
+    renderVotePlayers();
+    finishVoteBtn.disabled = true;
+    currentPhase = 'voting';
+    selectedVoteIndex = null;
+  }
+
+  // عرض لاعبين للتصويت
+  function renderVotePlayers() {
+    playersVoteList.innerHTML = '';
+    players.forEach((p,i) => {
+      if(!p.isOut) {
+        const btn = document.createElement('button');
+        btn.textContent = p.name;
+        btn.dataset.index = i;
+        btn.addEventListener('click', () => voteSelected(i));
+        playersVoteList.appendChild(btn);
+      }
+    });
+  }
+
+  // اختيار لاعب للتصويت
+  function voteSelected(index) {
+    selectedVoteIndex = index;
+    [...playersVoteList.children].forEach(btn => {
+      btn.disabled = btn.dataset.index != index;
+    });
+    finishVoteBtn.disabled = false;
+  }
+
+  // انهاء التصويت وعرض النتيجة
+  finishVoteBtn.onclick = () => {
+    if(selectedVoteIndex === null) return;
+    voteScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+
+    if(selectedVoteIndex === liarIndex) {
+      resultMessage.textContent = `صادوا برا السالفة! اللاعب "${players[liarIndex].name}" هو برا السالفة. فاز الجميع! 🎉`;
+    } else {
+      resultMessage.textContent = `لم يصادوا برا السالفة. اللاعب "${players[liarIndex].name}" هو برا السالفة وفاز هو! 😢`;
+    }
+  };
+
+  // إعادة اللعب
+  restartBtn.onclick = () => {
+    players = [];
+    currentPlayerIndex = 0;
+    currentPhase = 'setup';
+    chosenTopic = '';
+    secretWord = '';
+    liarIndex = -1;
+    questionsAsked = [];
+    selectedVoteIndex = null;
+    messageBox.textContent = '';
+    topicSelect.value = '';
+    playersInputs.innerHTML = '';
+    for(let i=0; i<3; i++){
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = `اسم اللاعب ${i+1}`;
+      playersInputs.appendChild(input);
+    }
+
+    setupScreen.classList.remove('hidden');
+    roleRevealScreen.classList.add('hidden');
+    questionScreen.classList.add('hidden');
+    voteScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    nextQuestionBtn.disabled = false;
+    startVoteBtn.classList.add('hidden');
+    customAskSection.classList.add('hidden');
+  };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>قائمة الألعاب - وهج</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      background-color: #0f1c2e;
+      color: #fff;
+      font-family: 'Cairo', sans-serif;
+      padding: 0;
+    }
+    header {
+      background-color: #0b1a2d;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    header h1 {
+      font-size: 28px;
+      color: #00bfff;
+      margin: 0;
+    }
+    nav a {
+      color: #ccc;
+      margin-left: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      color: #00bfff;
+    }
+    .games-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 30px;
+    }
+    .game-card {
+      background-color: #13294b;
+      border-radius: 16px;
+      padding: 25px;
+      width: 300px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.25);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .game-card:hover {
+      transform: translateY(-5px);
+    }
+    .game-card h2 {
+      color: #00bfff;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .game-card p {
+      color: #ccc;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .game-card a {
+      background-color: #00bfff;
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .game-card a:hover {
+      background-color: #009acd;
+    }
+    footer {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      padding: 20px;
+      background-color: #0b1a2d;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>وهج</h1>
+    <nav>
+      <a href="whj.html">الرئيسية</a>
+      <a href="games.html">الألعاب</a>
+      <a href="about.html">حول وهج</a>
+      <a href="contact.html">تواصل معنا</a>
+    </nav>
+  </header>
+
+  <section class="games-container">
+    <div class="game-card">
+      <h2>وش صار بعدين؟</h2>
+      <p>لعبة قصص ناقصة! اقرأ القصة وخمّن وش صار بعدين من بين 5 اختيارات، التحدي يبدأ لما الوقت يضغط!</p>
+      <a href="wshsar.html">ابدأ اللعبة</a>
+    </div>
+
+    <div class="game-card">
+      <h2>لعبة المافيا</h2>
+      <p>لعبة اجتماعية تفاعلية، اكتشف من هو المافيا، الدكتور والمدنيين. تحدى أصدقائك وكن حذراً!</p>
+      <a href="mafia.html">ابدأ اللعبة</a>
+    </div>
+
+    <div class="game-card">
+      <h2>لعبة الكذبة والحقيقتين</h2>
+      <p>كل لاعب يكتب 3 جمل: كذبة وحقيقتين. حاول تكشف الكذبة! لعبة اجتماعية ممتعة.</p>
+      <a href="liar.html">ابدأ اللعبة</a>
+    </div>
+
+    <div class="game-card">
+      <h2>لعبة برا السالفة</h2>
+      <p>لعبة التخمين الجماعية، واحد برا السالفة ويحاولون يكتشفونه من خلال أسئلة وتلميحات.</p>
+      <a href="bra.html">ابدأ اللعبة</a>
+    </div>
+
+    <div class="game-card">
+      <h2>قريبًا 🔒</h2>
+      <p>نجهز لك لعبة جديدة بتجربة مختلفة وممتعة، ترقبها قريبًا جدًا!</p>
+      <a href="#" onclick="alert('ترقبونا 🔥')">قريبًا</a>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 منصة وهج – جميع الحقوق محفوظة 🔥 تصميم وتنفيذ: Wahab
+  </footer>
+</body>
+</html>

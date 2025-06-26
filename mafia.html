@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>لعبة المافيا - همس الظلام</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&display=swap" rel="stylesheet" />
+<style>
+  body {
+    margin: 0;
+    background: #100000;
+    color: #ffa0a0;
+    font-family: 'Cairo', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    user-select: none;
+  }
+  header {
+    width: 100%;
+    background: #3a0000;
+    box-shadow: 0 0 15px #ff0000;
+    padding: 20px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 26px;
+    color: #ff6666;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    font-family: 'Cairo', sans-serif;
+  }
+  #setupArea, #gameArea {
+    background: #1c0000;
+    border-radius: 15px;
+    padding: 25px 30px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 0 20px #ff0000;
+  }
+  h2, h3 {
+    color: #ff4444;
+  }
+  input[type="text"] {
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px 15px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: 1.5px solid #660000;
+    background: #330000;
+    color: #ffa0a0;
+    font-weight: 600;
+  }
+  button {
+    width: 100%;
+    padding: 15px 0;
+    background: #8b0000;
+    border: none;
+    color: #ff9999;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: 12px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 8px #b30000;
+  }
+  button:hover:not(:disabled) {
+    background: #ff4444;
+    color: #fff;
+    box-shadow: 0 0 12px #ff5555;
+  }
+  button:disabled {
+    background: #440000;
+    cursor: not-allowed;
+    color: #660000;
+    box-shadow: none;
+  }
+  #playersList {
+    margin-top: 20px;
+    background-color: #330000;
+    padding: 15px;
+    border-radius: 10px;
+    color: #ffbbbb;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  #playersList div {
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  .choice-buttons {
+    margin-top: 20px;
+  }
+  .choice-buttons button {
+    margin: 7px 0;
+    background: #550000;
+    color: #ffaaaa;
+  }
+  .choice-buttons button:hover:not(:disabled) {
+    background: #cc0000;
+    color: #fff;
+  }
+  #messageBox {
+    margin-top: 20px;
+    min-height: 50px;
+    font-weight: 700;
+    font-size: 18px;
+    color: #ff5555;
+  }
+</style>
+</head>
+<body>
+
+<header>لعبة المافيا - همس الظلام</header>
+
+<div id="setupArea">
+  <h2>أدخل أسماء اللاعبين (4 إلى 10)</h2>
+  <div id="playerInputs">
+    <input type="text" placeholder="اسم اللاعب 1" />
+    <input type="text" placeholder="اسم اللاعب 2" />
+    <input type="text" placeholder="اسم اللاعب 3" />
+    <input type="text" placeholder="اسم اللاعب 4" />
+  </div>
+  <button id="addPlayerBtn">➕ أضف لاعب</button>
+  <button id="startGameBtn">ابدأ اللعبة</button>
+  <p id="setupError" style="color:#ff4444; font-weight:bold; display:none;"></p>
+</div>
+
+<div id="gameArea" class="hidden">
+  <p id="instructionText" style="font-size:22px; font-weight:bold; margin-bottom: 10px;"></p>
+  <p id="roleReveal" style="font-size:20px; margin-bottom: 20px;"></p>
+  <button id="nextBtn">التالي</button>
+
+  <div id="mafiaChoiceArea" class="hidden">
+    <h3>المافيا، اختر من تريد قتله:</h3>
+    <div id="mafiaTargets" class="choice-buttons"></div>
+    <button id="mafiaConfirmBtn" disabled>قتل</button>
+  </div>
+
+  <div id="doctorChoiceArea" class="hidden">
+    <h3>الدكتور، اختر من تريد حمايته:</h3>
+    <div id="doctorTargets" class="choice-buttons"></div>
+    <button id="doctorConfirmBtn" disabled>تأكيد الحماية</button>
+  </div>
+
+  <div id="nightResult" class="hidden" style="margin-top:20px; font-size:20px; font-weight:bold; color:#ff4444;"></div>
+
+  <div id="messageBox"></div>
+
+  <div id="playersList" class="hidden">
+    <h3>قائمة اللاعبين والمهام:</h3>
+    <div id="playersStatus"></div>
+  </div>
+</div>
+
+<script>
+  const maxPlayers = 10;
+  const minPlayers = 4;
+  const mafiaKillLimit = 3;
+
+  let players = []; // {name, role, alive:true/false}
+  let currentIndex = 0;
+  let phase = 'reveal'; // reveal, revealShowed, nightClosedEyes, nightMafiaOpenEyes, nightMafiaChoose, nightDoctorOpenEyes, nightDoctorChoose, nightResultShow, dayDiscussion
+  let mafiaKillCount = 0;
+  let mafiaTarget = null;
+  let doctorTarget = null;
+
+  function rolesForPlayers(num) {
+    let mafiaCount = 1;
+    if (num >= 9) mafiaCount = 3;
+    else if (num >= 7) mafiaCount = 2;
+    else if (num === 6) mafiaCount = 2;
+
+    let roles = [];
+    for(let i=0;i<mafiaCount;i++) roles.push('مافيا');
+    roles.push('دكتور');
+    for(let i=roles.length;i<num;i++) roles.push('مدني');
+    return shuffle(roles);
+  }
+
+  function shuffle(arr) {
+    let array = arr.slice();
+    for(let i=array.length -1; i>0; i--) {
+      let j = Math.floor(Math.random()*(i+1));
+      [array[i],array[j]] = [array[j],array[i]];
+    }
+    return array;
+  }
+
+  const setupArea = document.getElementById('setupArea');
+  const gameArea = document.getElementById('gameArea');
+  const playersListDiv = document.getElementById('playersList');
+  const playersStatusDiv = document.getElementById('playersStatus');
+  const playerInputsDiv = document.getElementById('playerInputs');
+  const addPlayerBtn = document.getElementById('addPlayerBtn');
+  const startGameBtn = document.getElementById('startGameBtn');
+  const setupError = document.getElementById('setupError');
+
+  const instructionText = document.getElementById('instructionText');
+  const roleReveal = document.getElementById('roleReveal');
+  const nextBtn = document.getElementById('nextBtn');
+
+  const mafiaChoiceArea = document.getElementById('mafiaChoiceArea');
+  const mafiaTargetsDiv = document.getElementById('mafiaTargets');
+  const mafiaConfirmBtn = document.getElementById('mafiaConfirmBtn');
+
+  const doctorChoiceArea = document.getElementById('doctorChoiceArea');
+  const doctorTargetsDiv = document.getElementById('doctorTargets');
+  const doctorConfirmBtn = document.getElementById('doctorConfirmBtn');
+
+  const nightResult = document.getElementById('nightResult');
+  const messageBox = document.getElementById('messageBox');
+
+  addPlayerBtn.onclick = () => {
+    if(playerInputsDiv.children.length >= maxPlayers) return;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = `اسم اللاعب ${playerInputsDiv.children.length + 1}`;
+    playerInputsDiv.appendChild(input);
+  };
+
+  startGameBtn.onclick = () => {
+    const inputs = playerInputsDiv.querySelectorAll('input');
+    const names = [];
+    for(let inp of inputs){
+      if(inp.value.trim() === '') {
+        setupError.textContent = 'يجب إدخال أسماء لجميع اللاعبين';
+        setupError.style.display = 'block';
+        return;
+      }
+      names.push(inp.value.trim());
+    }
+    if(names.length < minPlayers || names.length > maxPlayers){
+      setupError.textContent = `عدد اللاعبين يجب أن يكون بين ${minPlayers} و ${maxPlayers}`;
+      setupError.style.display = 'block';
+      return;
+    }
+    setupError.style.display = 'none';
+    initializeGame(names);
+  };
+
+  function showMessage(msg) {
+    messageBox.textContent = msg;
+  }
+
+  function initializeGame(names){
+    players = [];
+    currentIndex = 0;
+    phase = 'reveal';
+    mafiaKillCount = 0;
+    mafiaTarget = null;
+    doctorTarget = null;
+
+    const roles = rolesForPlayers(names.length);
+    for(let i=0; i<names.length; i++){
+      players.push({name: names[i], role: roles[i], alive: true});
+    }
+    setupArea.classList.add('hidden');
+    gameArea.classList.remove('hidden');
+    playersListDiv.classList.remove('hidden');
+    updatePlayersStatus();
+    showNextPlayerRole();
+    showMessage('');
+  }
+
+  function updatePlayersStatus(){
+    playersStatusDiv.innerHTML = '';
+    players.forEach(p=>{
+      const div = document.createElement('div');
+      div.textContent = `${p.name} - ${p.alive ? 'حي' : 'مقتول'}`;
+      div.style.color = p.alive ? '#00ff88' : '#ff4444';
+      playersStatusDiv.appendChild(div);
+    });
+  }
+
+  function showNextPlayerRole(){
+    if(currentIndex >= players.length){
+      currentIndex = 0;
+      phase = 'nightClosedEyes';
+      instructionText.textContent = 'غمضوا عيونكم...';
+      roleReveal.textContent = '';
+      nextBtn.style.display = 'inline-block';
+      mafiaChoiceArea.classList.add('hidden');
+      doctorChoiceArea.classList.add('hidden');
+      nightResult.classList.add('hidden');
+      showMessage('');
+      return;
+    }
+    instructionText.textContent = `عط الجوال لـ ${players[currentIndex].name}`;
+    roleReveal.textContent = '';
+    nextBtn.style.display = 'inline-block';
+    mafiaChoiceArea.classList.add('hidden');
+    doctorChoiceArea.classList.add('hidden');
+    nightResult.classList.add('hidden');
+    showMessage('');
+  }
+
+  nextBtn.onclick = () => {
+    if(phase === 'reveal'){
+      roleReveal.textContent = `دورك هو: ${players[currentIndex].role}`;
+      nextBtn.textContent = currentIndex === players.length - 1 ? 'انتهى الكشف' : 'التالي';
+      phase = 'revealShowed';
+    } else if(phase === 'revealShowed'){
+      currentIndex++;
+      showNextPlayerRole();
+      phase = 'reveal';
+    } else if(phase === 'nightClosedEyes'){
+      phase = 'nightMafiaOpenEyes';
+      instructionText.textContent = 'المافيا افتح عيونك';
+      roleReveal.textContent = '';
+      nextBtn.textContent = 'التالي';
+      showMessage('المافيا افتح عيونك وخذ الجوال');
+    } else if(phase === 'nightMafiaOpenEyes'){
+      phase = 'nightMafiaChoose';
+      instructionText.textContent = 'المافيا، اختر من تريد قتله';
+      showAlivePlayers(mafiaTargetsDiv);
+      mafiaChoiceArea.classList.remove('hidden');
+      mafiaConfirmBtn.disabled = true;
+      nextBtn.style.display = 'none';
+      showMessage('');
+    } else if(phase === 'nightMafiaChoose'){
+      // هنا ننتظر اختيار المافيا، لا نفعل أي شيء بالضغط على التالي
+    } else if(phase === 'nightDoctorOpenEyes'){
+      phase = 'nightDoctorChoose';
+      instructionText.textContent = 'الدكتور افتح عيونك';
+      roleReveal.textContent = '';
+      mafiaChoiceArea.classList.add('hidden');
+      doctorChoiceArea.classList.remove('hidden');
+      showAlivePlayers(doctorTargetsDiv);
+      doctorConfirmBtn.disabled = true;
+      nextBtn.style.display = 'none';
+      showMessage('الدكتور افتح عيونك وخذ الجوال');
+    } else if(phase === 'nightDoctorChoose'){
+      // هنا ننتظر اختيار الدكتور، لا نفعل أي شيء بالضغط على التالي
+    } else if(phase === 'nightResultShow'){
+      showNightResult();
+      phase = 'dayDiscussion';
+      instructionText.textContent = 'افتحوا عيونكم';
+      roleReveal.textContent = '';
+      nextBtn.textContent = 'التالي';
+      showMessage('');
+    } else if(phase === 'dayDiscussion'){
+      mafiaChoiceArea.classList.add('hidden');
+      doctorChoiceArea.classList.add('hidden');
+      nightResult.classList.add('hidden');
+      mafiaTarget = null;
+      doctorTarget = null;
+      currentIndex = 0;
+      phase = 'nightClosedEyes';
+      instructionText.textContent = 'غمضوا عيونكم...';
+      roleReveal.textContent = '';
+      nextBtn.textContent = 'التالي';
+      showMessage('');
+    }
+  };
+
+  mafiaConfirmBtn.onclick = () => {
+    mafiaTarget = mafiaConfirmBtn.selectedPlayer;
+    mafiaChoiceArea.classList.add('hidden');
+    mafiaConfirmBtn.disabled = true;
+    nextBtn.style.display = 'inline-block';
+    phase = 'nightDoctorOpenEyes';
+    instructionText.textContent = 'الدكتور افتح عيونك';
+    roleReveal.textContent = '';
+    showMessage('الدكتور افتح عيونك وخذ الجوال');
+  };
+
+  mafiaTargetsDiv.addEventListener('click', (e) => {
+    if(e.target.tagName === 'BUTTON' && !e.target.disabled){
+      [...mafiaTargetsDiv.querySelectorAll('button')].forEach(b=>b.disabled = false);
+      e.target.disabled = true;
+      mafiaConfirmBtn.selectedPlayer = e.target.dataset.name;
+      mafiaConfirmBtn.disabled = false;
+      showMessage(`المافيا اختار قتل: ${e.target.dataset.name}`);
+    }
+  });
+
+  doctorConfirmBtn.onclick = () => {
+    doctorTarget = doctorConfirmBtn.selectedPlayer;
+    doctorChoiceArea.classList.add('hidden');
+    doctorConfirmBtn.disabled = true;
+    nextBtn.style.display = 'inline-block';
+    phase = 'nightResultShow';
+  };
+
+  doctorTargetsDiv.addEventListener('click', (e) => {
+    if(e.target.tagName === 'BUTTON' && !e.target.disabled){
+      [...doctorTargetsDiv.querySelectorAll('button')].forEach(b=>b.disabled = false);
+      e.target.disabled = true;
+      doctorConfirmBtn.selectedPlayer = e.target.dataset.name;
+      doctorConfirmBtn.disabled = false;
+      showMessage(`الدكتور اختار حماية: ${e.target.dataset.name}`);
+    }
+  });
+
+  function showAlivePlayers(container) {
+    container.innerHTML = '';
+    players.forEach(p => {
+      if(p.alive){
+        const btn = document.createElement('button');
+        btn.textContent = p.name;
+        btn.dataset.name = p.name;
+        btn.style.margin = '5px 0';
+        btn.style.padding = '10px 15px';
+        btn.style.borderRadius = '10px';
+        btn.style.border = 'none';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = '#550000';
+        btn.style.color = '#ff8888';
+        btn.style.fontWeight = '700';
+        container.appendChild(btn);
+      }
+    });
+  }
+
+  function showNightResult(){
+    nightResult.classList.remove('hidden');
+    if(mafiaTarget === doctorTarget){
+      nightResult.textContent = `المافيا حاول قتل ${mafiaTarget} لكن الدكتور حماه!`;
+      showMessage('الدكتور حمى الهدف واللاعب لم يمت.');
+    } else {
+      nightResult.textContent = `المافيا قتلت ${mafiaTarget}!`;
+      showMessage('');
+      let killedPlayer = players.find(p => p.name === mafiaTarget);
+      if(killedPlayer){
+        killedPlayer.alive = false;
+        mafiaKillCount++;
+        updatePlayersStatus();
+      }
+    }
+    checkGameOver();
+  }
+
+  function checkGameOver(){
+    const aliveMafia = players.filter(p => p.role === 'مافيا' && p.alive);
+    const aliveCivilians = players.filter(p => p.role !== 'مافيا' && p.alive);
+    if(mafiaKillCount >= mafiaKillLimit){
+      alert(`المافيا فازوا! تم قتل ${mafiaKillCount} لاعبين.`);
+      location.reload();
+    } else if(aliveMafia.length === 0){
+      alert('المدنيين فازوا! تم القضاء على كل المافيا.');
+      location.reload();
+    } else if(aliveMafia.length >= aliveCivilians.length){
+      alert('المافيا فازوا! عدد المافيا مساوي أو أكثر من المدنيين.');
+      location.reload();
+    }
+  }
+</script>
+
+</body>
+</html>
